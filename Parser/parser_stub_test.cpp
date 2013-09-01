@@ -5,7 +5,8 @@
 
 int main(int argc, char* argv[])
 {
-  chr_code a("fake-code", "Does stuff with the things");
-  std::cout << "a's code is: " << a.code << "\na's desc is: " << a.desc 
-	    << std::endl;
+  if(argc > 1)
+    std::cout << argv[1];
+
+  std::cout << char(27) << "[E" << "Hello world";
 }
