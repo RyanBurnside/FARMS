@@ -24,17 +24,35 @@ none 	Set ANSI (versus VT52) 	DECANM
 class chr_code
 {
 public:
-  std::string code;    // Holds escape code to be searched for
-  std::string desc;    // English description of code for debugging
-  bool still_possible; // Marker to  keep searching against string_code
+  std::string code;     // Holds escape code to be searched for
+  std::string desc;     // English description of code for debugging
+  bool still_possible;  // Marker to  keep searching against string_code
+  bool contains_number; // Special processing required
+  bool next_index;
 
-  chr_code(std::string code = "", std::string desc = "")
+  chr_code(std::string code = "", std::string desc = "", 
+	   bool contains_number = false)
   {
     this->code = code;
     this->desc = desc;
     this->still_possible = true;
+    // Contains a number, requires special number argument processing
+    this->contains_number = contains_number; 
+    this->next_index = 0;
   }
+
+  void reset()
+  {
+    // Reset the search index and set it possible once more
+    this->still_possible = true;
+    this->next_index = 0;
+  }
+
 };
+
+// This is false when searching for escape char in string
+// Becomes true once an esc has been found
+bool pattern_compleation_mode = false;
 
 chr_code chr_codes[] =
 {
@@ -89,18 +107,18 @@ chr_code("[5m", "Turn blinking mode on"),
 chr_code("[7m", "Turn reverse video on"),
 chr_code("[8m", "Turn invisible text mode on"),
 
-chr_code("[<v>;<v>r", "Set top and bottom line#s of a window"),
+chr_code("[<v>;<v>r", "Set top and bottom line #s of a window", true),
 
-chr_code("[<n>A", "Move cursor up n lines"),
-chr_code("[<n>B", "Move cursor down n lines"),
-chr_code("[<n>C", "Move cursor right n lines"),
-chr_code("[<n>D", "Move cursor left n lines"),
+chr_code("[<n>A", "Move cursor up n lines", true),
+chr_code("[<n>B", "Move cursor down n lines", true),
+chr_code("[<n>C", "Move cursor right n lines", true),
+chr_code("[<n>D", "Move cursor left n lines", true),
 chr_code("[H", "Move cursor to upper left corner"),
 chr_code("[;H", "Move cursor to upper left corner"),
-chr_code("[<v>;<h>H", "Move cursor to screen location v,h"),
+chr_code("[<v>;<h>H", "Move cursor to screen location v,h", true),
 chr_code("[f", "Move cursor to upper left corner"),
 chr_code("[;f", "Move cursor to upper left corner"),
-chr_code("[<v>;<h>f", "Move cursor to screen location v,h"),
+chr_code("[<v>;<h>f", "Move cursor to screen location v,h", true),
 chr_code("[D", "Move/scroll window up one line"),
 chr_code("[M", "Move/scroll window down one line"),
 chr_code("[E", "Move to next line"),
@@ -132,11 +150,11 @@ chr_code("[0n", "Response: terminal is OK"),
 chr_code("[3n", "Response: terminal is not OK"),
 
 chr_code("[6n", "Get cursor position"),
-chr_code("[<v>;<h>R", "Response: cursor is at v,h"),
+chr_code("[<v>;<h>R", "Response: cursor is at v,h", true),
 
 chr_code("[c", "Identify what terminal type"),
 chr_code("[0c", "Identify what terminal type (another)"),
-chr_code("[?1;<n>0c", "Response: terminal type code n"),
+chr_code("[?1;<n>0c", "Response: terminal type code n", true),
 
 chr_code("[c", "Reset terminal to initial state"),
 
@@ -167,7 +185,7 @@ chr_code("[B", "Move cursor down one line"),
 chr_code("[C", "Move cursor right one char"),
 chr_code("[D", "Move cursor left one char"),
 chr_code("[H", "Move cursor to upper left corner"),
-chr_code("[<v><h>", "Move cursor to v,h location"),
+chr_code("[<v><h>", "Move cursor to v,h location", true),
 chr_code("[I", "Generate a reverse line-feed"),
 
 chr_code("[K", "Erase to end of current line"),
@@ -177,3 +195,15 @@ chr_code("[Z", "Identify what the terminal is"),
 chr_code("[/Z", "Correct response to ident")
 };
 
+
+void scan_letter(char c)
+{
+  // Scans through all possible strings, 
+  // if one does not match sets still_possible to false
+  // if the last searched positon = last position set still_possible to false
+  // if the char matches, and is the end of a pattern, return pattern
+  //   reset all items and pattern_compleation_mode = false
+
+  if(c == char(27))
+    pattern_compleation_mode = true;
+}
