@@ -4,12 +4,6 @@
 class chr_code
 {
 public:
-  std::string code;     // Holds escape code to be searched for
-  std::string desc;     // English description of code for debugging
-  bool still_possible;  // Marker to  keep searching against string_code
-  bool contains_number; // Special processing required
-  bool next_index;
-
   chr_code(std::string code = "", std::string desc = "", 
 	   bool contains_number = false)
   {
@@ -18,15 +12,85 @@ public:
     this->still_possible = true;
     // Contains a number, requires special number argument processing
     this->contains_number = contains_number; 
-    this->next_index = 0;
+    this->search_index = 0;
+  }
+
+  std::string get_code()
+  {
+    // TODO make this pass by ref instead of copy
+    return code;
+  }
+
+  std::string get_desc()
+  {
+    // TODO make this pass by ref instead of copy
+    return desc;
   }
 
   void reset()
   {
     // Reset the search index and set it possible once more
     this->still_possible = true;
-    this->next_index = 0;
+    this->search_index = 0;
   }
+
+  bool still_valid()
+  {
+    return still_possible;
+  }
+
+  bool now_matches(char c)
+  {
+    // This function returns true when the code has been matched fully
+    // Each time a char is entered the pattern advances one letter until
+    // the pattern matches or is rejected
+
+    if(still_possible == true)
+    {
+      // Tests to see if index is still valid
+      if (search_index == code.length())
+      {
+	// The word has failed, return false
+	still_possible = false;
+	return false;
+      }
+
+      // Enter char matching conditions since the index is valid
+      char considered_char = code[search_index];
+      
+      // Test to see if character matches search_index
+      if(considered_char == c)
+      {
+	// Character matches final char and code matches!
+	if(search_index == code.length() -1)
+	{
+	  still_possible = false;
+	  return true;
+	}
+	// The character matches but the search is not yet complete, iterate
+	search_index++;
+	return false;
+      }
+      else
+      {
+	// The word has failed, return false
+	still_possible = false;
+	return false;
+      }
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+private:
+  std::string code;     // Holds escape code to be searched for
+  std::string desc;     // English description of code for debugging
+  bool still_possible;  // Marker to  keep searching against string_code
+  bool contains_number; // Special processing required
+  bool search_index;
+
 };
 
 
@@ -211,23 +275,17 @@ void scan_letter(char c)
   {
     for(i = codes.begin(); i != codes.end(); ++i)
     {
-      if(i->still_possible)
+      if(i->still_valid())
       {
-	// Contains a numeric arg, requires special parsing
-	if(i->contains_number)
+	if(i->now_matches(c))
 	{
-	  std::cout << "blah blah blah regex" << std::endl;
-	}
-	// Contains no numeric arg, normal processing
-	else
-	{
-	  std::cout << i->desc << std::endl;
+	  std::cout << "FOUND ONE!" << "Code is: " << i->get_code()
+	            << " Description is: " << i->get_desc() << std::endl;
+	  // Now reset the state
+	  pattern_compleation_mode = false;
+	  reset_codes();
 	}
       }
     }
-  }
-  else
-  {
-    std::cout << c << std::endl;
   }
 }
