@@ -1,6 +1,6 @@
 Drawing Escape codes:
 
-The idea is to make out display act like a state machine.
+The idea is to make our display act like a state machine.
 When drawing, the last set attributes are used.
 
 ATTRIBUTE SETTING
@@ -8,12 +8,12 @@ set pen color (R, G, B):   ^[~P,*,*,*;
 set brush color (R, G, B): ^[~B,*,*,*;
 set pen width (N):         ^[~W,*;
 set shape fill (0/1):      ^[~F,*;
-set resolution             ^[~R,*,*;
+set resolution(x, y):       ^[~R,*,*;
 
 SHAPE DRAWING
 draw line (x, y, x2, y2):                ^[~l,*,*,*,*;
 draw rectangle (x, y, x2, y2, filled?):  ^[~r,*,*,*,*;
 draw triangle (x, y, x2, y2, x3, y3):    ^[~t,*,*,*,*,*,*;
-draw oval (x, y, x2, y2)                 ^[~o,*,*,*,*;
+draw oval (x, y, x2, y2):                ^[~o,*,*,*,*;
 draw point (x, y):                       ^[~p,*,*;
 clear screen with brush color ():        ^[~c; 
