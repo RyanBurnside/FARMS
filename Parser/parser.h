@@ -229,21 +229,21 @@ void set_codes()
   // Custom codes with regex * for number parameters
 
   // Attribute setting
-  codes.push_back(Chr_code("[~P,*,*,*;", "set pen color (R, G, B)"), true);
-  codes.push_back(Chr_code("[~B,*,*,*;", "set brush color (R, G, B)"), true); 
-  codes.push_back(Chr_code("[~W,*;", "set pen width (N)"), true);         
-  codes.push_back(Chr_code("[~F,*;", "set shape fill (0/1)"), true);      
-  codes.push_back(Chr_code("[~R,*,*;", "set resolution(x, y)"), true);
+  codes.push_back(Chr_code("[~P,*,*,*;", "set pen color (R, G, B)", true));
+  codes.push_back(Chr_code("[~B,*,*,*;", "set brush color (R, G, B)", true)); 
+  codes.push_back(Chr_code("[~W,*;", "set pen width (N)", true));         
+  codes.push_back(Chr_code("[~F,*;", "set shape fill (0/1)", true));      
+  codes.push_back(Chr_code("[~R,*,*;", "set resolution(x, y)", true));
 
   // Shape drawing
-  codes.push_back(Chr_code("[~l,*,*,*,*;", "draw line (x, y, x2, y2)"), true);
-  codes.push_back(Chr_code("[~r,*,*,*,*;", "draw rectangle (x, y, x2, y2)"), 
-		  true);           
+  codes.push_back(Chr_code("[~l,*,*,*,*;", "draw line (x, y, x2, y2)", true));
+  codes.push_back(Chr_code("[~r,*,*,*,*;", "draw rectangle (x, y, x2, y2)",
+			   true));           
   codes.push_back(Chr_code("[~t,*,*,*,*,*,*;", 
-			   "draw triangle (x, y, x2, y2, x3, y3)"), true);    
-  codes.push_back(Chr_code("[~o,*,*,*,*;", "draw oval (x, y, x2, y2)"), true);               
-  codes.push_back(Chr_code("[~p,*,*;", "draw point (x, y)"), true);       
-  codes.push_back(Chr_code("[~c;", "clear screen with brush color ()"), true);        
+			   "draw triangle (x, y, x2, y2, x3, y3)", true));    
+  codes.push_back(Chr_code("[~o,*,*,*,*;", "draw oval (x, y, x2, y2)", true));               
+  codes.push_back(Chr_code("[~p,*,*;", "draw point (x, y)", true));       
+  codes.push_back(Chr_code("[~c;", "clear screen with brush color ()", true));        
 }
 
 void scan_letter(char c)
