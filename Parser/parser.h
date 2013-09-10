@@ -3,6 +3,13 @@
 
 class Chr_code
 {
+private:
+  std::string code;     // Holds escape code to be searched for
+  std::string desc;     // English description of code for debugging
+  bool still_possible;  // Marker to  keep searching against string_code
+  bool contains_number; // Special processing required
+  unsigned int search_index;
+
 public:
   Chr_code(std::string code = "", std::string desc = "", 
 	   bool contains_number = false)
@@ -48,7 +55,7 @@ public:
     if(still_possible == true)
     {
       // Tests to see if index is still valid
-      if (search_index >= code.length())
+      if(search_index == code.size())
       {
 	// The word has failed, return false
 	still_possible = false;
@@ -57,43 +64,32 @@ public:
 
       // Enter char matching conditions since the index is valid
       char considered_char = code[search_index];
-      
+
       // Test to see if character matches search_index
-      if(considered_char == c)
+      if(considered_char != c)
       {
-	// Character matches final char and code matches!
-	if(search_index == code.length() -1)
-	{
-	  std::cout << "FOUND ONE!" << "Code is: " << get_code()
-	            << " Description is: " << get_desc() << std::endl;
-	  // Now reset the state
-	  still_possible = false;
-	  search_index = 0;
-	  return true;
-	}
-	// The character matches but the search is not yet complete, iterate
-	search_index++;
-	return false;
-      }
-      else
-      {
-	// The word has failed, return false
 	still_possible = false;
 	return false;
       }
+
+      //Found a match
+      if(considered_char == c)
+      {
+	if(search_index == code.size() -1)
+	{
+	  std::cout << "YUS! " << desc << " was found!\n";
+	  still_possible = false;
+	  return true;
+	}
+      }
+      if(search_index < code.size())
+      {
+	search_index++;
+	return false;
+      }
     }
-
     return false;
-
   }
-
-private:
-  std::string code;     // Holds escape code to be searched for
-  std::string desc;     // English description of code for debugging
-  bool still_possible;  // Marker to  keep searching against string_code
-  bool contains_number; // Special processing required
-  bool search_index;
-
 };
 
 
@@ -112,7 +108,7 @@ void reset_codes()
 
 void set_codes()
 {
-  // Strange bug the lines starting with [? get ignored...
+// Strange bug the lines starting with [? get ignored...
   pattern_compleation_mode = false;
   codes.push_back(Chr_code("[20h", "Set new line mode"));
   codes.push_back(Chr_code("[?1h", "Set cursor key to application"));
@@ -148,7 +144,7 @@ void set_codes()
   codes.push_back(Chr_code("[(1", "Set G0 alternate character ROM"));
   codes.push_back(Chr_code("[)1", "Set G1 alternate character ROM"));
   codes.push_back(Chr_code("[(2", "Set G0 alt char ROM and spec."));
-  codes.push_back(Chr_code("[)2", "Set G1 alt char ROM and spec.")); 
+  codes.push_back(Chr_code("[)2", "Set G1 alt char ROM and spec."));
   
   codes.push_back(Chr_code("[N", "Set single shift 2"));
   codes.push_back(Chr_code("[O", "Set single shift 3"));
@@ -162,8 +158,8 @@ void set_codes()
   codes.push_back(Chr_code("[7m", "Turn reverse video on"));
   codes.push_back(Chr_code("[8m", "Turn invisible text mode on"));
   
-  codes.push_back(Chr_code("[<v>;<v>r", 
-  			   "Set top and bottom line #s of a window", true));
+  codes.push_back(Chr_code("[<v>;<v>r",
+   "Set top and bottom line #s of a window", true));
   
   codes.push_back(Chr_code("[<n>A", "Move cursor up n lines", true));
   codes.push_back(Chr_code("[<n>B", "Move cursor down n lines", true));
@@ -172,11 +168,11 @@ void set_codes()
   codes.push_back(Chr_code("[H", "Move cursor to upper left corner"));
   codes.push_back(Chr_code("[;H", "Move cursor to upper left corner"));
   codes.push_back(Chr_code("[<v>;<h>H", "Move cursor to screen location v,h",
-  			   true));
+   true));
   codes.push_back(Chr_code("[f", "Move cursor to upper left corner"));
   codes.push_back(Chr_code("[;f", "Move cursor to upper left corner"));
   codes.push_back(Chr_code("[<v>;<h>f", "Move cursor to screen location v,h",
-  			   true));
+   true));
   
   codes.push_back(Chr_code("[D", "Move/scroll window up one line"));
   codes.push_back(Chr_code("[M", "Move/scroll window down one line"));
@@ -213,8 +209,8 @@ void set_codes()
   
   codes.push_back(Chr_code("[c", "Identify what terminal type"));
   codes.push_back(Chr_code("[0c", "Identify what terminal type (another)"));
-  codes.push_back(Chr_code("[?1;<n>0c", "Response: terminal type code n", 
-  			   true));
+  codes.push_back(Chr_code("[?1;<n>0c", "Response: terminal type code n",
+   true));
   
   codes.push_back(Chr_code("[c", "Reset terminal to initial state"));
   
@@ -229,6 +225,24 @@ void set_codes()
   codes.push_back(Chr_code("[2q", "Turn on LED #2"));
   codes.push_back(Chr_code("[3q", "Turn on LED #3"));
   codes.push_back(Chr_code("[4q", "Turn on LED #4"));
+
+  // Custom codes with regex * for number parameters
+
+  // Attribute setting
+  codes.push_back(Chr_code("[~P,*,*,*;", "set pen color (R, G, B)"));
+  codes.push_back(Chr_code("[~B,*,*,*;", "set brush color (R, G, B)")); 
+  codes.push_back(Chr_code("[~W,*;", "set pen width (N)"));         
+  codes.push_back(Chr_code("[~F,*;", "set shape fill (0/1)"));      
+  codes.push_back(Chr_code("[~R,*,*;", "set resolution(x, y)"));
+
+  // Shape drawing
+  codes.push_back(Chr_code("[~l,*,*,*,*;", "draw line (x, y, x2, y2)"));
+  codes.push_back(Chr_code("[~r,*,*,*,*;", "draw rectangle (x, y, x2, y2)"));           
+  codes.push_back(Chr_code("[~t,*,*,*,*,*,*;", 
+			   "draw triangle (x, y, x2, y2, x3, y3)"));    
+  codes.push_back(Chr_code("[~o,*,*,*,*;", "draw oval (x, y, x2, y2)"));               
+  codes.push_back(Chr_code("[~p,*,*;", "draw point (x, y)"));       
+  codes.push_back(Chr_code("[~c;", "clear screen with brush color ()"));        
 }
 
 void scan_letter(char c)
@@ -240,17 +254,9 @@ void scan_letter(char c)
   // if the char matches, and is the end of a pattern, return pattern
   //   reset all items and pattern_compleation_mode = false
   std::vector<Chr_code>::iterator i;
-  
-  if(c == char(27))
-  {
-    // Escape found, set pattern_completion mode, reset all codes
-    pattern_compleation_mode = true;
-    reset_codes();
-    return;
-  }
 
   // If currently inside a pattern, process the patterns
-  if(pattern_compleation_mode)
+  if(pattern_compleation_mode == true)
   {
     for(i = codes.begin(); i != codes.end(); ++i)
     {
@@ -260,8 +266,17 @@ void scan_letter(char c)
 	{
 	  pattern_compleation_mode = false;
 	  reset_codes();
+	  return;
 	}
       }
     }
+  }
+
+  if(c == char(27))
+  {
+    // Escape found, set pattern_completion mode, reset all codes
+    pattern_compleation_mode = true;
+    reset_codes();
+    return;
   }
 }
