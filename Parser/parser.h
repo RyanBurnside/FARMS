@@ -4,11 +4,12 @@
 class Chr_code
 {
 private:
-  std::string code;     // Holds escape code to be searched for
-  std::string desc;     // English description of code for debugging
-  bool still_possible;  // Marker to  keep searching against string_code
-  bool contains_number; // Special processing required
-  unsigned int search_index;
+  std::string code;           // Holds escape code to be searched for
+  std::string desc;           // English description of code for debugging
+  bool still_possible;        // Marker to  keep searching against string_code
+  bool contains_number;       // Special processing required
+  unsigned int search_index;  // The current letter to be searched against
+  std::vector<std::string> arguments; // Holds a list of string arguments
 
 public:
   Chr_code(std::string code = "", std::string desc = "", 
@@ -17,9 +18,23 @@ public:
     this->code = code;
     this->desc = desc;
     this->still_possible = true;
+
     // Contains a number, requires special number argument processing
     this->contains_number = contains_number; 
     this->search_index = 0;
+
+    // Count the number of * (numerical argument placeholders)
+    // and make the strings to hold the args.
+    if(contains_number)
+    {
+      for(int i = 0; i < code.size(); ++i)
+      {
+	if(code[i] == '*')
+	{
+	  this->arguments.push_back("");
+	}
+      }
+    }
   }
 
   std::string get_code()
@@ -34,11 +49,21 @@ public:
     return desc;
   }
 
+  unsigned int get_num_arguments()
+  {
+    return arguments.size();
+  }
+
   void reset()
   {
     // Reset the search index and set it possible once more
     still_possible = true;
     search_index = 0;
+    // Clear the list of captured arguments
+    for(unsigned int i = 0; i < arguments.size(); ++i)
+    {
+      arguments[i] = "";
+    }
   }
 
   bool still_valid()
@@ -77,7 +102,6 @@ public:
       {
 	if(search_index == code.size() -1)
 	{
-	  std::cout << "YUS! " << desc << " was found!\n";
 	  still_possible = false;
 	  return true;
 	}
@@ -108,7 +132,9 @@ void reset_codes()
 
 void set_codes()
 {
-// Strange bug the lines starting with [? get ignored...
+  // ACHTUNG, ACHTUNG! IN MY CODES * MEANS AN ARGUMENT MUST BE DUG OUT OF THE
+  // Chr_code's STRING. It is special syntax notation for this code only.
+
   pattern_compleation_mode = false;
   codes.push_back(Chr_code("[20h", "Set new line mode"));
   codes.push_back(Chr_code("[?1h", "Set cursor key to application"));
@@ -158,20 +184,20 @@ void set_codes()
   codes.push_back(Chr_code("[7m", "Turn reverse video on"));
   codes.push_back(Chr_code("[8m", "Turn invisible text mode on"));
   
-  codes.push_back(Chr_code("[<v>;<v>r",
+  codes.push_back(Chr_code("[*;*r",
    "Set top and bottom line #s of a window", true));
   
-  codes.push_back(Chr_code("[<n>A", "Move cursor up n lines", true));
-  codes.push_back(Chr_code("[<n>B", "Move cursor down n lines", true));
-  codes.push_back(Chr_code("[<n>C", "Move cursor right n lines", true));
-  codes.push_back(Chr_code("[<n>D", "Move cursor left n lines", true));
+  codes.push_back(Chr_code("[*A", "Move cursor up n lines", true));
+  codes.push_back(Chr_code("[*B", "Move cursor down n lines", true));
+  codes.push_back(Chr_code("[*C", "Move cursor right n lines", true));
+  codes.push_back(Chr_code("[*D", "Move cursor left n lines", true));
   codes.push_back(Chr_code("[H", "Move cursor to upper left corner"));
   codes.push_back(Chr_code("[;H", "Move cursor to upper left corner"));
-  codes.push_back(Chr_code("[<v>;<h>H", "Move cursor to screen location v,h",
+  codes.push_back(Chr_code("[*;*H", "Move cursor to screen location v,h",
    true));
   codes.push_back(Chr_code("[f", "Move cursor to upper left corner"));
   codes.push_back(Chr_code("[;f", "Move cursor to upper left corner"));
-  codes.push_back(Chr_code("[<v>;<h>f", "Move cursor to screen location v,h",
+  codes.push_back(Chr_code("[*;*f", "Move cursor to screen location v,h",
    true));
   
   codes.push_back(Chr_code("[D", "Move/scroll window up one line"));
@@ -205,11 +231,11 @@ void set_codes()
   codes.push_back(Chr_code("[3n", "Response: terminal is not OK"));
   
   codes.push_back(Chr_code("[6n", "Get cursor position"));
-  codes.push_back(Chr_code("[<v>;<h>R", "Response: cursor is at v,h", true));
+  codes.push_back(Chr_code("[*;*R", "Response: cursor is at v,h", true));
   
   codes.push_back(Chr_code("[c", "Identify what terminal type"));
   codes.push_back(Chr_code("[0c", "Identify what terminal type (another)"));
-  codes.push_back(Chr_code("[?1;<n>0c", "Response: terminal type code n",
+  codes.push_back(Chr_code("[?1;*0c", "Response: terminal type code n",
    true));
   
   codes.push_back(Chr_code("[c", "Reset terminal to initial state"));
@@ -248,12 +274,11 @@ void set_codes()
 
 void scan_letter(char c)
 {
-
   // Scans through all possible strings, 
   // if one does not match sets still_possible to false
   // if the last searched positon = last position set still_possible to false
-  // if the char matches, and is the end of a pattern, return pattern
-  //   reset all items and pattern_compleation_mode = false
+  // if the char matches, and is the end of a pattern, return true
+
   std::vector<Chr_code>::iterator i;
 
   // If currently inside a pattern, process the patterns
@@ -266,6 +291,8 @@ void scan_letter(char c)
 	if(i->now_matches(c))
 	{
 	  pattern_compleation_mode = false;
+	  // CALL THE FUNCTION HERE THEN CLEAR ALL FUNCTIONS
+
 	  reset_codes();
 	  return;
 	}
