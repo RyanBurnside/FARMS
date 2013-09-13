@@ -10,7 +10,7 @@ private:
   bool contains_number;       // Special processing required
   unsigned int search_index;  // The current letter to be searched against
   std::vector<std::string> arguments; // Holds a list of string arguments
-
+  unsigned int current_parameter; // Holds the current parameter to fill
 public:
   Chr_code(std::string code = "", std::string desc = "", 
 	   bool contains_number = false)
@@ -35,6 +35,7 @@ public:
 	}
       }
     }
+    this->current_parameter = 0;
   }
 
   std::string get_code()
@@ -54,11 +55,17 @@ public:
     return arguments.size();
   }
 
+  std::string get_argument(unsigned int index)
+  {
+    return arguments[index];
+  }
+
   void reset()
   {
     // Reset the search index and set it possible once more
     still_possible = true;
     search_index = 0;
+    current_parameter = 0;
     // Clear the list of captured arguments
     for(unsigned int i = 0; i < arguments.size(); ++i)
     {
@@ -91,21 +98,58 @@ public:
       char considered_char = code[search_index];
 
       // Test to see if character matches search_index
+      if(contains_number && considered_char == '*')
+      {
+	if(c < 48 || c > 57) // Not a valid number, see if it maches the next
+	{
+	  if(search_index + 1 < code.size()) // Before than the last index?
+	  {
+	    if(code[search_index + 1] == c) // Matches next char?
+	    {
+	      std::cout << "Code: " << code << " Current Parameter: " << 
+		current_parameter << std::endl;
+	      std::cout << "Caught " << 
+		arguments[current_parameter] << std::endl;
+	      std::cout << "Moving to next parameter!" << std::endl;
+		current_parameter++;
+		search_index += 2;
+		std::cout << "The seperator was: " << c << std::endl;
+		if(search_index == code.size())
+		{
+		  still_possible = false;
+		  return true;
+		}
+		return false;
+	    }
+	  }
+	  still_possible = false;
+	  return false;
+	}
+	// It is a digit and matches!
+	else
+	{
+	  arguments[current_parameter] += c;
+	  return false;
+	}
+      }
+      
+      // Found a match
+      if(considered_char == c)
+      {
+	if(search_index == code.size() -1)
+	{
+	  std::cout << "Compleated term!" << std::endl;
+	  still_possible = false;
+	  return true;
+	}
+      }
+            
       if(considered_char != c)
       {
 	still_possible = false;
 	return false;
       }
 
-      //Found a match
-      if(considered_char == c)
-      {
-	if(search_index == code.size() -1)
-	{
-	  still_possible = false;
-	  return true;
-	}
-      }
       if(search_index < code.size())
       {
 	search_index++;
@@ -286,20 +330,24 @@ void scan_letter(char c)
   {
     for(i = codes.begin(); i != codes.end(); ++i)
     {
-      if(i->still_valid())
+      if(i->now_matches(c))
       {
-	if(i->now_matches(c))
-	{
-	  pattern_compleation_mode = false;
+	pattern_compleation_mode = false;
 	  // CALL THE FUNCTION HERE THEN CLEAR ALL FUNCTIONS
-
-	  reset_codes();
-	  return;
+	  // Testing here...
+	std::cout << "Found code! " <<  i->get_code() << std::endl;
+	for(int j = 0; j < i->get_num_arguments(); ++j)
+	{
+	  std::cout << i->get_num_arguments() << " arguments found.\n";
+	  std::cout << "Argument: " << j <<
+	    " is " << i->get_argument(j) << std::endl;
 	}
+	reset_codes();
+	  return;
       }
     }
   }
-
+  
   if(c == char(27))
   {
     // Escape found, set pattern_completion mode, reset all codes
